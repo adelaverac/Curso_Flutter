@@ -30,7 +30,7 @@ class PeliculasProvider {
   }
 
   Future<List<Pelicula>> getEnCines() async {
-    final result = await requestService('3/movie/now_playing', 1);
+    final result = await requestService('3/movie/now_playing', 1, null);
     final peliculas = new Peliculas.fromJsonList(result['results']);
     return peliculas.items;
   }
@@ -40,7 +40,8 @@ class PeliculasProvider {
 
     _cargando = true;
     _popularesPage++;
-    final result = await requestService('3/movie/popular', _popularesPage);
+    final result =
+        await requestService('3/movie/popular', _popularesPage, null);
     final peliculas = new Peliculas.fromJsonList(result['results']);
     final response = peliculas.items;
     _populares.addAll(response);
@@ -51,14 +52,24 @@ class PeliculasProvider {
   }
 
   Future<List<Actor>> getCast(String peliId) async {
-    final result = await requestService('3/movie/$peliId/credits', 1);
+    final result = await requestService('3/movie/$peliId/credits', 1, null);
     final cast = new Cast.fromJsonList(result['cast']);
     return cast.actores;
   }
 
-  dynamic requestService(String endpoint, int page) async {
-    final url = Uri.https(_url, endpoint,
-        {'api_key': _apiKey, 'language': _language, 'page': page.toString()});
+  Future<List<Pelicula>> searchPelicula(String query) async {
+    final result = await requestService('3/search/movie', 1, query);
+    final peliculas = new Peliculas.fromJsonList(result['results']);
+    return peliculas.items;
+  }
+
+  dynamic requestService(String endpoint, int page, String query) async {
+    final url = Uri.https(_url, endpoint, {
+      'api_key': _apiKey,
+      'language': _language,
+      'page': page.toString(),
+      'query': query
+    });
 
     final response = await http.get(url);
     return json.decode(response.body);
